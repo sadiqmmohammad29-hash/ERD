@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>School Management System - Entity Relationship Diagram</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<style>
+  :root{--ink:#14213d;--teal:#0b7a75;--paper:#f6f8fb;--line:#d5dce8;--muted:#5b6678}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--paper);color:var(--ink)}
+  header{background:var(--ink);color:#fff;padding:20px 24px}
+  header h1{margin:0 0 4px;font-size:1.35rem;font-weight:650}
+  header p{margin:0;font-size:.85rem;color:#b9c4d9}
+  nav{display:flex;gap:6px;flex-wrap:wrap;padding:12px 16px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  nav button{border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 12px;border-radius:6px;font-size:.82rem;cursor:pointer}
+  nav button.on{background:var(--teal);border-color:var(--teal);color:#fff}
+  .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 16px;font-size:.8rem;color:var(--muted)}
+  .bar b{color:var(--ink)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap}
+  .legend span{background:#fff;border:1px solid var(--line);border-radius:5px;padding:4px 8px}
+  .tools{margin-left:auto;display:flex;gap:6px}
+  .tools button{border:1px solid var(--line);background:#fff;border-radius:5px;padding:5px 10px;cursor:pointer}
+  .panel{display:none;padding:0 16px 24px}
+  .desc{font-size:.88rem;color:var(--muted);margin:4px 0 12px;max-width:900px;line-height:1.5}
+  .canvas{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:auto;padding:16px;min-height:300px}
+  table{border-collapse:collapse;width:100%;background:#fff;font-size:.84rem}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--ink);color:#fff;font-weight:600}
+  td:nth-child(3){white-space:nowrap;font-weight:600;color:var(--teal)}
+  .err{color:#b3261e;font-size:.85rem;white-space:pre-wrap}
+  @media print{nav,.bar .tools{display:none}.panel{display:block!important;page-break-after:always}}
+</style>
+</head>
+<body>
+<header>
+  <h1>School Management System: Entity Relationship Diagram</h1>
+  <p>Logical data model, v1.0 | Crow's Foot notation | Admissions to Alumni, Academics, Co-curricular, Finance, Security</p>
+</header>
+
+<nav id="tabs"></nav>
+
+<div class="bar">
+  <div class="legend">
+    <span><b>||</b> exactly one</span>
+    <span><b>|o</b> zero or one</span>
+    <span><b>}|</b> one or many</span>
+    <span><b>}o</b> zero or many</span>
+    <span><b>PK</b> primary key</span>
+    <span><b>FK</b> foreign key</span>
+    <span><b>UK</b> unique</span>
+  </div>
+  <div class="tools">
+    <button onclick="zoom(-0.15)">Zoom -</button>
+    <button onclick="zoom(0.15)">Zoom +</button>
+    <button onclick="window.print()">Print / PDF</button>
+  </div>
+</div>
+
+<div id="panels"></div>
+
+<script>
+const D = {};
+
+D.overview = `
+erDiagram
+    ACADEMIC_YEAR ||--o{ SECTION : "contains"
+    ADMISSION_CYCLE ||--o{ APPLICATION : "receives"
+    APPLICATION ||--o| STUDENT : "converts to"
+    GUARDIAN ||--o{ STUDENT_GUARDIAN : "linked via"
+    STUDENT ||--o{ STUDENT_GUARDIAN : "linked via"
+    STUDENT ||--o| MEDICAL_RECORD : "has"
+    STUDENT ||--o{ CLASS_ENROLLMENT : "placed in"
+    SECTION ||--o{ CLASS_ENROLLMENT : "holds"
+    SECTION ||--o{ COURSE_OFFERING : "studies"
+    COURSE ||--o{ COURSE_OFFERING : "offered as"
+    STAFF ||--o{ COURSE_OFFERING : "teaches"
+    STUDENT ||--o{ COURSE_ENROLLMENT : "registers"
+    COURSE_OFFERING ||--o{ COURSE_ENROLLMENT : "has"
+    COURSE_OFFERING ||--o{ ASSESSMENT : "assessed by"
+    ASSESSMENT ||--o{ ASSESSMENT_RESULT : "produces"
+    COURSE_ENROLLMENT ||--o{ ASSESSMENT_RESULT : "earns"
+    COURSE_ENROLLMENT ||--o{ ATTENDANCE : "tracked in"
+    STUDENT ||--o{ CLUB_MEMBERSHIP : "joins"
+    CLUB ||--o{ CLUB_MEMBERSHIP : "has"
+    SPORTS_TRIAL ||--o{ TRIAL_REGISTRATION : "receives"
+    STUDENT ||--o{ TRIAL_REGISTRATION : "enters"
+    SPORTS_TEAM ||--o{ TEAM_MEMBERSHIP : "fields"
+    STUDENT ||--o{ TEAM_MEMBERSHIP : "plays in"
+    EXTRA_CLASS ||--o{ EXTRA_CLASS_ENROLLMENT : "has"
+    STUDENT ||--o{ EXTRA_CLASS_ENROLLMENT : "attends"
+    FIELD_TRIP ||--o{ TRIP_REGISTRATION : "has"
+    STUDENT ||--o{ TRIP_REGISTRATION : "joins"
+    STUDENT ||--o{ INVOICE : "billed"
+    INVOICE ||--o{ PAYMENT : "settled by"
+    STUDENT ||--o{ DISCIPLINARY_RECORD : "subject of"
+    USER_ACCOUNT ||--o{ AUDIT_LOG : "generates"
+`;
+
+D.admissions = `
+erDiagram
+    ADMISSION_CYCLE ||--o{ APPLICATION : "receives"
+    GRADE_LEVEL ||--o{ APPLICATION : "applied for"
+    GUARDIAN ||--o{ APPLICATION : "submits"
+    APPLICATION ||--o{ APPLICANT_DOCUMENT : "includes"
+    APPLICATION ||--o{ ENTRANCE_TEST : "sits"
+    APPLICATION ||--o{ INTERVIEW : "attends"
+    STAFF ||--o{ INTERVIEW : "conducts"
+    APPLICATION ||--o| ADMISSION_DECISION : "results in"
+    APPLICATION ||--o| STUDENT : "converts to"
+    GRADE_LEVEL ||--o{ STUDENT : "currently in"
+    STUDENT ||--o{ STUDENT_GUARDIAN : "linked via"
+    GUARDIAN ||--o{ STUDENT_GUARDIAN : "linked via"
+    STUDENT ||--o| MEDICAL_RECORD : "has"
+
+    ADMISSION_CYCLE {
+        int cycle_id PK
+        int academic_year_id FK
+        string cycle_name
+        date open_date
+        date close_date
+        int total_seats
+        decimal application_fee
+        string status "Draft, Open, Closed"
+    }
+    GRADE_LEVEL {
+        int grade_level_id PK
+        string grade_name UK
+        int display_order
+        int min_age
+        int seat_capacity
+    }
+    APPLICATION {
+        int application_id PK
+        string application_no UK
+        int cycle_id FK
+        int grade_level_id FK
+        int guardian_id FK
+        string applicant_first_name
+        string applicant_last_name
+        date date_of_birth
+        string gender
+        string nationality
+        string previous_school
+        string previous_grade
+        boolean fee_paid
+        string application_status "Submitted, Under Review, Test Scheduled, Interview, Accepted, Waitlisted, Rejected, Enrolled"
+        datetime submitted_at
+    }
+    APPLICANT_DOCUMENT {
+        int document_id PK
+        int application_id FK
+        string document_type "Birth Certificate, Transfer Certificate, Report Card, ID Proof"
+        string file_url
+        string verification_status "Pending, Verified, Rejected"
+        int verified_by FK
+        datetime verified_at
+        datetime uploaded_at
+    }
+    ENTRANCE_TEST {
+        int test_id PK
+        int application_id FK
+        date test_date
+        string subject
+        int max_marks
+        int marks_obtained
+        string result_status "Pass, Fail, Absent"
+    }
+    INTERVIEW {
+        int interview_id PK
+        int application_id FK
+        int interviewer_id FK
+        datetime scheduled_at
+        string mode "In Person, Online"
+        int score
+        string remarks
+        string outcome
+    }
+    ADMISSION_DECISION {
+        int decision_id PK
+        int application_id FK, UK
+        string decision "Accepted, Waitlisted, Rejected"
+        int decided_by FK
+        date decision_date
+        date offer_expiry_date
+        boolean seat_confirmed
+        string remarks
+    }
+    STUDENT {
+        int student_id PK
+        string admission_no UK
+        int application_id FK
+        int current_grade_level_id FK
+        string first_name
+        string last_name
+        date date_of_birth
+        string gender
+        string blood_group
+        string nationality
+        date admission_date
+        string student_status "Active, Suspended, Withdrawn, Alumni"
+        string photo_url
+    }
+    GUARDIAN {
+        int guardian_id PK
+        string full_name
+        string occupation
+        string mobile_number
+        string email UK
+        string residential_address
+        string id_proof_number
+    }
+    STUDENT_GUARDIAN {
+        int student_id PK, FK
+        int guardian_id PK, FK
+        string relationship_type "Father, Mother, Legal Guardian"
+        boolean is_primary_contact
+        boolean is_emergency_contact
+        boolean is_fee_payer
+        boolean pickup_authorized
+    }
+    MEDICAL_RECORD {
+        int medical_id PK
+        int student_id FK, UK
+        string allergies
+        string chronic_conditions
+        string current_medications
+        string vaccination_status
+        string insurance_provider
+        string insurance_policy_no
+        string emergency_physician
+        date last_checkup_date
+    }
+    STAFF {
+        int staff_id PK
+        string full_name
+    }
+`;
+
+D.academics = `
+erDiagram
+    ACADEMIC_YEAR ||--o{ TERM : "divided into"
+    ACADEMIC_YEAR ||--o{ SECTION : "contains"
+    GRADE_LEVEL ||--o{ SECTION : "split into"
+    STAFF ||--o{ SECTION : "class teacher of"
+    ROOM |o--o{ SECTION : "home room of"
+    DEPARTMENT ||--o{ STAFF : "employs"
+    DEPARTMENT ||--o{ COURSE : "owns"
+    GRADE_LEVEL ||--o{ COURSE : "taught at"
+    COURSE ||--o{ COURSE_OFFERING : "offered as"
+    SECTION ||--o{ COURSE_OFFERING : "studies"
+    STAFF ||--o{ COURSE_OFFERING : "teaches"
+    COURSE_OFFERING ||--o{ TIMETABLE_SLOT : "scheduled in"
+    ROOM ||--o{ TIMETABLE_SLOT : "hosts"
+    STUDENT ||--o{ CLASS_ENROLLMENT : "placed in"
+    SECTION ||--o{ CLASS_ENROLLMENT : "holds"
+    STUDENT ||--o{ COURSE_ENROLLMENT : "registers"
+    COURSE_OFFERING ||--o{ COURSE_ENROLLMENT : "has"
+    COURSE_ENROLLMENT ||--o{ ATTENDANCE : "tracked in"
+    TIMETABLE_SLOT ||--o{ ATTENDANCE : "recorded for"
+    TERM ||--o{ ASSESSMENT : "includes"
+    COURSE_OFFERING ||--o{ ASSESSMENT : "assessed by"
+    ASSESSMENT ||--o{ ASSESSMENT_RESULT : "produces"
+    COURSE_ENROLLMENT ||--o{ ASSESSMENT_RESULT : "earns"
+    STUDENT ||--o{ REPORT_CARD : "receives"
+    TERM ||--o{ REPORT_CARD : "issued for"
+
+    ACADEMIC_YEAR {
+        int academic_year_id PK
+        string year_name UK
+        date start_date
+        date end_date
+        boolean is_current
+    }
+    TERM {
+        int term_id PK
+        int academic_year_id FK
+        string term_name
+        date start_date
+        date end_date
+    }
+    GRADE_LEVEL {
+        int grade_level_id PK
+        string grade_name UK
+        int display_order
+    }
+    SECTION {
+        int section_id PK
+        int academic_year_id FK
+        int grade_level_id FK
+        int class_teacher_id FK
+        int room_id FK
+        string section_name
+        int capacity
+    }
+    DEPARTMENT {
+        int department_id PK
+        string department_name UK
+        int head_staff_id FK
+    }
+    STAFF {
+        int staff_id PK
+        string employee_no UK
+        int department_id FK
+        string full_name
+        string designation
+        string qualification
+        string employment_type "Full Time, Part Time, Contract"
+        date joining_date
+        string email UK
+        string mobile_number
+        string staff_status
+    }
+    COURSE {
+        int course_id PK
+        string course_code UK
+        int department_id FK
+        int grade_level_id FK
+        string title
+        string description
+        decimal credits
+        string course_type "Core, Elective"
+        int weekly_periods
+    }
+    COURSE_OFFERING {
+        int offering_id PK
+        int course_id FK
+        int section_id FK
+        int teacher_id FK
+        int max_capacity
+        string status
+    }
+    ROOM {
+        int room_id PK
+        string room_name UK
+        string room_type "Classroom, Lab, Hall"
+        int capacity
+        string building
+    }
+    TIMETABLE_SLOT {
+        int slot_id PK
+        int offering_id FK
+        int room_id FK
+        string day_of_week
+        string start_time
+        string end_time
+    }
+    STUDENT {
+        int student_id PK
+        string admission_no UK
+    }
+    CLASS_ENROLLMENT {
+        int class_enrollment_id PK
+        int student_id FK
+        int section_id FK
+        int roll_no
+        date enrolled_on
+        string status "Active, Transferred, Completed"
+    }
+    COURSE_ENROLLMENT {
+        int course_enrollment_id PK
+        int student_id FK
+        int offering_id FK
+        date enrolled_on
+        string status "Active, Dropped, Completed"
+        string final_grade
+    }
+    ATTENDANCE {
+        int attendance_id PK
+        int course_enrollment_id FK
+        int slot_id FK
+        date attendance_date
+        string status "Present, Absent, Late, Excused"
+        int marked_by FK
+        string remarks
+    }
+    ASSESSMENT {
+        int assessment_id PK
+        int offering_id FK
+        int term_id FK
+        string title
+        string assessment_type "Quiz, Midterm, Final, Project"
+        int max_marks
+        decimal weightage_pct
+        date assessment_date
+    }
+    ASSESSMENT_RESULT {
+        int result_id PK
+        int assessment_id FK
+        int course_enrollment_id FK
+        decimal marks_obtained
+        string grade_letter
+        string remarks
+        int entered_by FK
+        boolean is_published
+    }
+    REPORT_CARD {
+        int report_card_id PK
+        int student_id FK
+        int term_id FK
+        decimal overall_pct
+        string overall_grade
+        decimal attendance_pct
+        int class_rank
+        string teacher_remarks
+        int approved_by FK
+        date published_on
+    }
+`;
+
+D.cocurricular = `
+erDiagram
+    STAFF ||--o{ CLUB : "advises"
+    CLUB ||--o{ CLUB_MEMBERSHIP : "has"
+    STUDENT ||--o{ CLUB_MEMBERSHIP : "joins"
+    SPORT ||--o{ SPORTS_TEAM : "played by"
+    SPORT ||--o{ SPORTS_TRIAL : "selects via"
+    STAFF ||--o{ SPORTS_TEAM : "coaches"
+    SPORTS_TRIAL ||--o{ TRIAL_REGISTRATION : "receives"
+    STUDENT ||--o{ TRIAL_REGISTRATION : "enters"
+    SPORTS_TEAM |o--o{ TRIAL_REGISTRATION : "selected into"
+    SPORTS_TEAM ||--o{ TEAM_MEMBERSHIP : "fields"
+    STUDENT ||--o{ TEAM_MEMBERSHIP : "plays in"
+    SPORTS_TEAM ||--o{ FIXTURE : "plays"
+    STAFF ||--o{ EXTRA_CLASS : "instructs"
+    EXTRA_CLASS ||--o{ EXTRA_CLASS_ENROLLMENT : "has"
+    STUDENT ||--o{ EXTRA_CLASS_ENROLLMENT : "attends"
+    STAFF ||--o{ FIELD_TRIP : "leads"
+    FIELD_TRIP ||--o{ TRIP_REGISTRATION : "has"
+    STUDENT ||--o{ TRIP_REGISTRATION : "joins"
+    GUARDIAN ||--o{ GUARDIAN_CONSENT : "gives"
+    TRIP_REGISTRATION |o--o| GUARDIAN_CONSENT : "requires"
+    TRIAL_REGISTRATION |o--o| GUARDIAN_CONSENT : "requires"
+    STUDENT ||--o{ ACHIEVEMENT : "earns"
+    SPORTS_TEAM |o--o{ ACHIEVEMENT : "won by"
+    CLUB |o--o{ ACHIEVEMENT : "won by"
+
+    CLUB {
+        int club_id PK
+        string club_name UK
+        string category "Arts, Science, Community, Tech"
+        string description
+        int advisor_staff_id FK
+        int max_members
+        string meeting_schedule
+        string venue
+        string status
+    }
+    CLUB_MEMBERSHIP {
+        int membership_id PK
+        int club_id FK
+        int student_id FK
+        string member_role "Member, President, Secretary"
+        date join_date
+        int approved_by FK
+        string status "Pending, Active, Left"
+    }
+    SPORT {
+        int sport_id PK
+        string sport_name UK
+        string sport_type "Team, Individual"
+        int min_age
+        int max_team_size
+    }
+    SPORTS_TEAM {
+        int team_id PK
+        int sport_id FK
+        int coach_id FK
+        int captain_student_id FK
+        string team_name
+        string age_group
+        string gender_category
+        string season
+    }
+    SPORTS_TRIAL {
+        int trial_id PK
+        int sport_id FK
+        date trial_date
+        string venue
+        string eligibility_criteria
+        date registration_deadline
+        int slots_available
+    }
+    TRIAL_REGISTRATION {
+        int trial_registration_id PK
+        int trial_id FK
+        int student_id FK
+        int team_id FK
+        boolean fitness_cleared
+        decimal performance_score
+        string selection_status "Applied, Selected, Waitlisted, Not Selected"
+        datetime registered_at
+    }
+    TEAM_MEMBERSHIP {
+        int team_membership_id PK
+        int team_id FK
+        int student_id FK
+        int jersey_no
+        string playing_position
+        date joined_on
+        string status
+    }
+    FIXTURE {
+        int fixture_id PK
+        int team_id FK
+        string opponent_name
+        date match_date
+        string venue
+        string match_type "Friendly, League, Knockout"
+        string result
+        string score_summary
+    }
+    EXTRA_CLASS {
+        int extra_class_id PK
+        int instructor_id FK
+        string title
+        string subject_area
+        string schedule
+        date start_date
+        date end_date
+        decimal fee_amount
+        int max_capacity
+        string status
+    }
+    EXTRA_CLASS_ENROLLMENT {
+        int ec_enrollment_id PK
+        int extra_class_id FK
+        int student_id FK
+        date enrolled_on
+        string payment_status
+        string status
+    }
+    FIELD_TRIP {
+        int trip_id PK
+        int lead_staff_id FK
+        string title
+        string destination
+        date trip_date
+        string departure_time
+        string return_time
+        decimal cost_per_student
+        int max_participants
+        boolean risk_assessment_done
+        string status
+    }
+    TRIP_REGISTRATION {
+        int trip_registration_id PK
+        int trip_id FK
+        int student_id FK
+        datetime registered_at
+        string payment_status
+        boolean attended
+    }
+    GUARDIAN_CONSENT {
+        int consent_id PK
+        int guardian_id FK
+        int student_id FK
+        int trip_registration_id FK
+        int trial_registration_id FK
+        string consent_type "Field Trip, Sports Participation, Medical Treatment"
+        boolean consent_given
+        datetime consent_time
+        string signature_ref
+    }
+    ACHIEVEMENT {
+        int achievement_id PK
+        int student_id FK
+        int team_id FK
+        int club_id FK
+        string title
+        string level "School, District, State, National"
+        date awarded_on
+        string certificate_url
+    }
+    STUDENT {
+        int student_id PK
+    }
+    STAFF {
+        int staff_id PK
+    }
+    GUARDIAN {
+        int guardian_id PK
+    }
+`;
+
+D.finance = `
+erDiagram
+    ACADEMIC_YEAR ||--o{ FEE_STRUCTURE : "defines"
+    GRADE_LEVEL ||--o{ FEE_STRUCTURE : "priced for"
+    FEE_STRUCTURE ||--|{ FEE_ITEM : "made of"
+    STUDENT ||--o{ INVOICE : "billed"
+    GUARDIAN ||--o{ INVOICE : "pays"
+    INVOICE ||--|{ INVOICE_LINE : "itemised in"
+    FEE_ITEM |o--o{ INVOICE_LINE : "sourced from"
+    INVOICE ||--o{ PAYMENT : "settled by"
+    PAYMENT ||--o{ REFUND : "may lead to"
+    SCHOLARSHIP ||--o{ STUDENT_SCHOLARSHIP : "awarded as"
+    STUDENT ||--o{ STUDENT_SCHOLARSHIP : "receives"
+
+    FEE_STRUCTURE {
+        int fee_structure_id PK
+        int academic_year_id FK
+        int grade_level_id FK
+        string structure_name
+        decimal total_amount
+        string status
+    }
+    FEE_ITEM {
+        int fee_item_id PK
+        int fee_structure_id FK
+        string fee_head "Tuition, Lab, Library, Transport, Exam"
+        decimal amount
+        string frequency "Annual, Termly, Monthly, One Time"
+        boolean is_mandatory
+        date due_date
+    }
+    INVOICE {
+        int invoice_id PK
+        string invoice_no UK
+        int student_id FK
+        int guardian_id FK
+        date issue_date
+        date due_date
+        decimal gross_amount
+        decimal discount_amount
+        decimal tax_amount
+        decimal net_amount
+        string status "Draft, Issued, Partially Paid, Paid, Overdue, Cancelled"
+    }
+    INVOICE_LINE {
+        int line_id PK
+        int invoice_id FK
+        int fee_item_id FK
+        string description
+        string source_type "Fee Item, Extra Class, Field Trip, Late Fee"
+        int source_ref_id
+        int quantity
+        decimal unit_price
+        decimal line_total
+    }
+    PAYMENT {
+        int payment_id PK
+        string receipt_no UK
+        int invoice_id FK
+        date payment_date
+        decimal amount
+        string payment_mode "Card, UPI, Bank Transfer, Cash, Cheque"
+        string transaction_ref UK
+        string gateway_status
+        int received_by FK
+        string status
+    }
+    REFUND {
+        int refund_id PK
+        int payment_id FK
+        decimal refund_amount
+        string reason
+        int approved_by FK
+        date refund_date
+        string status "Requested, Approved, Processed, Rejected"
+    }
+    SCHOLARSHIP {
+        int scholarship_id PK
+        string scholarship_name UK
+        string scholarship_type "Merit, Need Based, Sports, Sibling"
+        string discount_type "Percent, Flat"
+        decimal discount_value
+        decimal budget_limit
+        string eligibility_criteria
+    }
+    STUDENT_SCHOLARSHIP {
+        int award_id PK
+        int scholarship_id FK
+        int student_id FK
+        date awarded_on
+        date valid_till
+        int approved_by FK
+        string status
+    }
+    STUDENT {
+        int student_id PK
+    }
+    GUARDIAN {
+        int guardian_id PK
+    }
+    ACADEMIC_YEAR {
+        int academic_year_id PK
+    }
+    GRADE_LEVEL {
+        int grade_level_id PK
+    }
+`;
+
+D.security = `
+erDiagram
+    STAFF |o--o| USER_ACCOUNT : "may have login"
+    GUARDIAN |o--o| USER_ACCOUNT : "may have login"
+    STUDENT |o--o| USER_ACCOUNT : "may have login"
+    USER_ACCOUNT ||--o{ USER_ROLE : "assigned"
+    ROLE ||--o{ USER_ROLE : "granted to"
+    ROLE ||--o{ ROLE_PERMISSION : "holds"
+    PERMISSION ||--o{ ROLE_PERMISSION : "given to"
+    USER_ACCOUNT ||--o{ AUDIT_LOG : "generates"
+    USER_ACCOUNT ||--o{ NOTIFICATION : "receives"
+    STUDENT ||--o{ DISCIPLINARY_RECORD : "subject of"
+    STAFF ||--o{ DISCIPLINARY_RECORD : "reports"
+
+    USER_ACCOUNT {
+        int user_id PK
+        string username UK
+        string email UK
+        string password_hash
+        boolean mfa_enabled
+        string account_status "Active, Locked, Disabled"
+        int failed_login_count
+        datetime last_login_at
+        int staff_id FK
+        int guardian_id FK
+        int student_id FK
+    }
+    ROLE {
+        int role_id PK
+        string role_name UK "Principal, Admissions Officer, Teacher, Accountant, Parent, Student"
+        string description
+    }
+    USER_ROLE {
+        int user_id PK, FK
+        int role_id PK, FK
+        date assigned_on
+        int assigned_by FK
+    }
+    PERMISSION {
+        int permission_id PK
+        string permission_code UK
+        string module
+        string action "View, Create, Edit, Approve, Delete"
+    }
+    ROLE_PERMISSION {
+        int role_id PK, FK
+        int permission_id PK, FK
+    }
+    AUDIT_LOG {
+        int audit_id PK
+        int user_id FK
+        string action
+        string entity_name
+        int entity_id
+        string old_value
+        string new_value
+        string ip_address
+        string session_id
+        datetime event_time
+    }
+    NOTIFICATION {
+        int notification_id PK
+        int user_id FK
+        string channel "SMS, Email, App"
+        string subject
+        string message
+        string status "Queued, Sent, Failed, Read"
+        datetime sent_at
+        datetime read_at
+    }
+    DISCIPLINARY_RECORD {
+        int record_id PK
+        int student_id FK
+        int reported_by FK
+        date incident_date
+        string incident_type
+        string severity "Minor, Major, Critical"
+        string description
+        string action_taken
+        boolean guardian_notified
+        string status "Open, Resolved, Escalated"
+        date resolved_on
+    }
+    STUDENT {
+        int student_id PK
+    }
+    STAFF {
+        int staff_id PK
+    }
+    GUARDIAN {
+        int guardian_id PK
+    }
+`;
+
+const RULES = [
+ ["Admission Cycle to Application","1 : N","One cycle receives many applications. An application belongs to exactly one cycle. Closed cycles reject new applications."],
+ ["Application to Admission Decision","1 : 0..1","Each application has at most one final decision. Offers carry an expiry date, after which the seat is released."],
+ ["Application to Student","1 : 0..1","A student record is created only after the seat is confirmed and fees are received. Admission number is generated once."],
+ ["Student to Guardian (via Student Guardian)","M : N","A student can have several guardians, and a guardian can have several children. Every student needs one primary contact and one emergency contact."],
+ ["Student to Medical Record","1 : 0..1","One confidential health record per student. Access is limited to nurse, principal and the guardian."],
+ ["Grade Level to Section","1 : N","A grade is split into sections per academic year. Section size cannot exceed its capacity."],
+ ["Student to Section (via Class Enrollment)","M : N over time","A student has exactly one active section per academic year. History is kept when a student moves."],
+ ["Course to Course Offering","1 : N","A course is offered many times across sections and years. Each offering has exactly one teacher."],
+ ["Student to Course Offering (via Course Enrollment)","M : N","Covers electives and core subjects. Timetable clashes for a student or teacher are blocked."],
+ ["Course Enrollment to Attendance","1 : N","One attendance entry per student per timetable slot per date. Edits after lock date need approval."],
+ ["Assessment to Assessment Result","1 : N","One result per student per assessment (unique pair). Results stay hidden until published."],
+ ["Student to Report Card","1 : N","One report card per student per term, approved by the class teacher or principal before release."],
+ ["Student to Club (via Club Membership)","M : N","Membership needs advisor approval. A club cannot exceed max members. Students can hold a configurable maximum number of clubs."],
+ ["Sports Trial to Trial Registration","1 : N","This is the sports admission step. Registration needs fitness clearance and guardian consent before the trial."],
+ ["Sports Team to Team Membership","1 : N","A selected student joins a team with a jersey number that is unique within the team."],
+ ["Extra Class to Extra Class Enrollment","1 : N","Enrollment is capped by class capacity. A confirmed enrollment adds a line to the student invoice."],
+ ["Field Trip to Trip Registration","1 : N","A student cannot travel without signed guardian consent. The trip needs a completed risk assessment."],
+ ["Registration to Guardian Consent","0..1 : 0..1","Each consent record points to one trip or one trial registration. Consent time and signature are stored as proof."],
+ ["Fee Structure to Fee Item","1 : 1..N","A fee structure must contain at least one fee item. It is defined per grade and academic year."],
+ ["Invoice to Invoice Line","1 : 1..N","An invoice has at least one line. Lines can come from fee items, extra classes, trips or late fees."],
+ ["Invoice to Payment","1 : N","Part payments are allowed. Total payments cannot exceed the net invoice amount. Invoice status updates automatically."],
+ ["Payment to Refund","1 : N","Refunds need approval by an authorised finance user and cannot exceed the amount paid."],
+ ["User to Role, Role to Permission","M : N","Access is role based. Sensitive actions such as grade edits, fee waivers and record deletion need approval permissions."],
+ ["User Account to Audit Log","1 : N","Audit entries are append-only. Every create, update, delete and export on sensitive data is logged with old and new values."]
+];
+
+const TABS = [
+ ["overview","Overview","High level map of how every module connects to the student. Attributes are hidden here and shown in the module views."],
+ ["admissions","Admissions & Student Records","Journey from enquiry to enrolled student: application, documents, entrance test, interview, decision, then student, guardian and medical records."],
+ ["academics","Academics","Academic year, terms, sections, courses, timetable, attendance, assessments, results and report cards."],
+ ["cocurricular","Clubs, Sports & Trips","Club joining, sports trials (sports admissions), teams, fixtures, extra classes, field trips, guardian consent and achievements."],
+ ["finance","Fees & Finance","Fee structures, invoices, payments, refunds and scholarships."],
+ ["security","Security & Compliance","Users, roles, permissions, audit trail, notifications and disciplinary records."],
+ ["rules","Cardinality & Business Rules","Plain-language reading of each key relationship for client review and sign-off."]
+];
+
+let zoomLevel = 1;
+const rendered = {};
+
+mermaid.initialize({
+  startOnLoad:false,
+  securityLevel:"loose",
+  theme:"base",
+  themeVariables:{
+    primaryColor:"#eaf3f2", primaryBorderColor:"#14213d", primaryTextColor:"#14213d",
+    lineColor:"#14213d", secondaryColor:"#ffffff", tertiaryColor:"#f6f8fb",
+    fontFamily:"Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize:"14px"
+  },
+  er:{useMaxWidth:false, layoutDirection:"TB", minEntityWidth:130, minEntityHeight:60, entityPadding:12, stroke:"#14213d", fill:"#ffffff"}
+});
+
+const nav = document.getElementById("tabs");
+const panels = document.getElementById("panels");
+
+TABS.forEach(([key,label,desc])=>{
+  const b = document.createElement("button");
+  b.textContent = label; b.id = "tab-"+key;
+  b.onclick = ()=>show(key);
+  nav.appendChild(b);
+
+  const p = document.createElement("section");
+  p.className = "panel"; p.id = "panel-"+key;
+  p.innerHTML = '<p class="desc">'+desc+'</p>';
+  if(key==="rules"){
+    let rows = RULES.map((r,i)=>"<tr><td>"+(i+1)+"</td><td>"+r[0]+"</td><td>"+r[1]+"</td><td>"+r[2]+"</td></tr>").join("");
+    p.innerHTML += '<table><thead><tr><th>#</th><th>Relationship</th><th>Cardinality</th><th>Business rule</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  } else {
+    p.innerHTML += '<div class="canvas" id="canvas-'+key+'">Loading diagram...</div>';
+  }
+  panels.appendChild(p);
+});
+
+async function show(key){
+  TABS.forEach(([k])=>{
+    document.getElementById("tab-"+k).classList.toggle("on", k===key);
+    document.getElementById("panel-"+k).style.display = (k===key) ? "block" : "none";
+  });
+  if(key==="rules" || rendered[key]) { applyZoom(); return; }
+  const el = document.getElementById("canvas-"+key);
+  try{
+    const out = await mermaid.render("erd_"+key, D[key]);
+    el.innerHTML = out.svg;
+    rendered[key] = true;
+    applyZoom();
+  }catch(e){
+    el.innerHTML = '<div class="err">Diagram could not be drawn. Check your internet connection (the diagram library loads from a CDN).\n\n'+ (e && e.message ? e.message : e) +'</div>';
+  }
+}
+
+function applyZoom(){
+  document.querySelectorAll(".canvas").forEach(c=>{ c.style.zoom = zoomLevel; });
+}
+function zoom(d){
+  zoomLevel = Math.min(2, Math.max(0.3, zoomLevel + d));
+  applyZoom();
+}
+
+show("overview");
+</script>
+
+</body>
+</html>
